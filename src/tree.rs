@@ -59,6 +59,14 @@ pub struct ElementData {
     /// If the element is an HTML `<template>` element,
     /// the document fragment node that is the root of template contents.
     pub template_contents: Option<NodeRef>,
+
+    /// The element's score for whether it should be considered for the
+    /// "readable" tree.
+    pub score: Cell<f32>,
+
+    /// The element's score for whether it should be considered for the
+    /// "readable" tree.
+    pub is_candidate: Cell<bool>,
 }
 
 /// Data specific to document nodes.
@@ -222,6 +230,8 @@ impl NodeRef {
             attributes: RefCell::new(Attributes {
                 map: attributes.into_iter().collect(),
             }),
+            score: Cell::new(0.0),
+            is_candidate: Cell::new(false),
         }))
     }
 

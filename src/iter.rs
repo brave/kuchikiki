@@ -399,12 +399,10 @@ where
 
     #[inline]
     fn next(&mut self) -> Option<NodeDataRef<ElementData>> {
-        for element in self.iter.by_ref() {
-            if self.selectors.borrow().matches(&element) {
-                return Some(element);
-            }
-        }
-        None
+        let selectors = self.selectors.borrow();
+        self.iter
+            .by_ref()
+            .find(|element| selectors.matches(element))
     }
 }
 
@@ -415,12 +413,11 @@ where
 {
     #[inline]
     fn next_back(&mut self) -> Option<NodeDataRef<ElementData>> {
-        for element in self.iter.by_ref().rev() {
-            if self.selectors.borrow().matches(&element) {
-                return Some(element);
-            }
-        }
-        None
+        let selectors = self.selectors.borrow();
+        self.iter
+            .by_ref()
+            .rev()
+            .find(|element| selectors.matches(element))
     }
 }
 

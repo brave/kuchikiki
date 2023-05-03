@@ -75,7 +75,7 @@ fn parse_and_serialize_fragment() {
 #[test]
 fn parse_file() {
     let mut path = Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf();
-    path.push("test_data".to_string());
+    path.push("test_data");
     path.push("foo.html");
 
     let html = r"<!DOCTYPE html><html><head>

@@ -1,13 +1,11 @@
-## Archived
+# Kuchiki (朽木)
 
-This repository is archived to reflect its level of (in)activity and set maintenance expectations.
+HTML tree-manipulation library for Rust.
 
-If some ideas or code in it are useful to you, feel free to use them in other repositories and crates
-in accordance with the license.
+Upstream has archived their repository, since they've been unable
+to maintain the crate. However, the Brave project is still using
+a branch, and so will continue to maintain a fork.
 
-Note however that tree data structure design in Rust is full of trade-offs,
-maybe some approach other than `Rc`/`Weak` would work better for you.
-(For example [`Vec` + indices][1], if it’s acceptable
-not to recover memory for dropped nodes before the entire document is dropped.)
+[Documentation](https://docs.rs/kuchiki)
 
-[1]: https://github.com/SimonSapin/victor/blob/fdb11f3e87f6d2d59170d10169fa6deb94e53b94/victor/src/dom/mod.rs#L19-L29
+See the [Security Policy](SECURITY.md) for information on reporting vulnerabilities.

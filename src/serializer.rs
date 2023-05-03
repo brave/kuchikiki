@@ -15,7 +15,7 @@ impl Serialize for NodeRef {
         traversal_scope: TraversalScope,
     ) -> Result<()> {
         match (traversal_scope, self.data()) {
-            (ref scope, &NodeData::Element(ref element)) => {
+            (ref scope, NodeData::Element(element)) => {
                 if *scope == IncludeNode {
                     let attrs = element.attributes.borrow();
 
@@ -60,12 +60,10 @@ impl Serialize for NodeRef {
 
             (ChildrenOnly(_), _) => Ok(()),
 
-            (IncludeNode, &NodeData::Doctype(ref doctype)) => {
-                serializer.write_doctype(&doctype.name)
-            }
-            (IncludeNode, &NodeData::Text(ref text)) => serializer.write_text(&text.borrow()),
-            (IncludeNode, &NodeData::Comment(ref text)) => serializer.write_comment(&text.borrow()),
-            (IncludeNode, &NodeData::ProcessingInstruction(ref contents)) => {
+            (IncludeNode, NodeData::Doctype(doctype)) => serializer.write_doctype(&doctype.name),
+            (IncludeNode, NodeData::Text(text)) => serializer.write_text(&text.borrow()),
+            (IncludeNode, NodeData::Comment(text)) => serializer.write_comment(&text.borrow()),
+            (IncludeNode, NodeData::ProcessingInstruction(contents)) => {
                 let contents = contents.borrow();
                 serializer.write_processing_instruction(&contents.0, &contents.1)
             }

@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - main
+      - speedreader
   pull_request:
     branches:
-      main
+      - main
+      - speedreader
   schedule:
     - cron: '28 20 2 * *'
 jobs:

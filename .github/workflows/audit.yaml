@@ -1,4 +1,4 @@
-name: Security audit
+name: Audit
 on:
   push:
     paths:
@@ -6,7 +6,8 @@ on:
       - '**/Cargo.lock'
   pull_request:
     branches:
-      main
+      - main
+      - speedreader
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'

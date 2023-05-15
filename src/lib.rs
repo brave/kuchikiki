@@ -1,6 +1,6 @@
 /*!
 
-Kuchiki (朽木), a HTML/XML tree manipulation library for Rust.
+Kuchikiki (口利き) is an HTML tree manipulation library for Rust.
 
 */
 
@@ -28,7 +28,7 @@ pub use parser::{parse_fragment, parse_html, parse_html_with_options, ParseOpts,
 pub use select::{Selector, Selectors, Specificity};
 pub use tree::{Doctype, DocumentData, ElementData, Node, NodeData, NodeRef};
 
-/// This module re-exports a number of traits that are useful when using Kuchiki.
+/// This module re-exports a number of traits that are useful when using Kuchikiki.
 /// It can be used with:
 ///
 /// ```rust

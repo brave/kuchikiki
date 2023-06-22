@@ -1,11 +1,17 @@
-# Kuchiki (朽木)
+# Kuchikiki (口利き)
 
 HTML tree-manipulation library for Rust.
 
-Upstream has archived their repository, since they've been unable
-to maintain the crate. However, the Brave project is still using
-a branch, and so will continue to maintain a fork.
+[Documentation](https://docs.rs/kuchikiki)
 
-[Documentation](https://docs.rs/kuchiki)
+This is a fork of the Kuchiki (朽木) library, which in now unmaintained.
+The Brave project is still using a branch, and so will continue to
+support this repository. You can use this version by updating the name
+in your `Cargo.toml` (add an extra `ki`!) and then remap code references
+to the new name, e.g. with
+
+```rust
+use kuchikiki as kuchiki
+```
 
 See the [Security Policy](SECURITY.md) for information on reporting vulnerabilities.

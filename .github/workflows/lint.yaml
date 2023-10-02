@@ -15,22 +15,22 @@ jobs:
       checks: write
     steps:
       - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
-      - name: Toolchain
+      - name: Toolchain # TODO: remove this one
         uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8 # v1
         with:
           components: clippy, rustfmt
           toolchain: stable
 
       - name: Cache
-        uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2
+        uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
 
       - name: Format
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1
+        uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1.0.7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-targets

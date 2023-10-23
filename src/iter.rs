@@ -1,5 +1,9 @@
 //! Node iterators
 
+// Addressing this lint is a semver-breaking change.
+// Remove this once the issue has been addressed.
+#![allow(clippy::result_unit_err)]
+
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::iter::Rev;

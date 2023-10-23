@@ -1,3 +1,7 @@
+// Addressing this lint is a semver-breaking change.
+// Remove this once the issue has been addressed.
+#![allow(clippy::result_unit_err)]
+
 use crate::attributes::ExpandedName;
 use crate::iter::{NodeIterator, Select};
 use crate::node_data_ref::NodeDataRef;

@@ -18,7 +18,7 @@ doctest = false
 [dependencies]
 cssparser = "0.27"
 matches = "0.1.4"
-html5ever = "0.26.0"
+html5ever = "0.25.1"
 selectors = "0.22"
 indexmap = "1.6.0"
 

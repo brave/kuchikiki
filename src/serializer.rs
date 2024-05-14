@@ -1,10 +1,10 @@
 use html5ever::serialize::TraversalScope::*;
 use html5ever::serialize::{serialize, Serialize, SerializeOpts, Serializer, TraversalScope};
 use html5ever::QualName;
-use std::io;
-use std::io::Write;
 use std::fmt;
 use std::fs::File;
+use std::io;
+use std::io::Write;
 use std::path::Path;
 
 use crate::tree::{NodeData, NodeRef};

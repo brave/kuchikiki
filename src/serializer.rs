@@ -1,10 +1,11 @@
 use html5ever::serialize::TraversalScope::*;
 use html5ever::serialize::{serialize, Serialize, SerializeOpts, Serializer, TraversalScope};
 use html5ever::QualName;
+use std::io;
+use std::io::Write;
+use std::fmt;
 use std::fs::File;
-use std::io::{Result, Write};
 use std::path::Path;
-use std::string::ToString;
 
 use crate::tree::{NodeData, NodeRef};
 
@@ -13,7 +14,7 @@ impl Serialize for NodeRef {
         &self,
         serializer: &mut S,
         traversal_scope: TraversalScope,
-    ) -> Result<()> {
+    ) -> io::Result<()> {
         match (traversal_scope, self.data()) {
             (ref scope, NodeData::Element(element)) => {
                 if *scope == IncludeNode {
@@ -76,19 +77,21 @@ impl Serialize for NodeRef {
     }
 }
 
-impl ToString for NodeRef {
+impl fmt::Display for NodeRef {
     #[inline]
-    fn to_string(&self) -> String {
-        let mut u8_vec = Vec::new();
-        self.serialize(&mut u8_vec).unwrap();
-        String::from_utf8(u8_vec).unwrap()
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Call the html serializer for the node (sub)tree.
+        let mut bytes = Vec::new();
+        self.serialize(&mut bytes).or(Err(fmt::Error))?;
+        let html = String::from_utf8(bytes).or(Err(fmt::Error))?;
+        f.write_str(&html)
     }
 }
 
 impl NodeRef {
     /// Serialize this node and its descendants in HTML syntax to the given stream.
     #[inline]
-    pub fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
+    pub fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         serialize(
             writer,
             self,
@@ -101,7 +104,7 @@ impl NodeRef {
 
     /// Serialize this node and its descendants in HTML syntax to a new file at the given path.
     #[inline]
-    pub fn serialize_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn serialize_to_file<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
         let mut file = File::create(&path)?;
         self.serialize(&mut file)
     }

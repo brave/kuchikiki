@@ -15,7 +15,10 @@
 //!   because it would involve running arbitrary code through `T::clone`
 //!   and provide that code with a reference to the inside of the cell.
 //!
-//! ```rust
+//! ```rust,compile_fail
+//! # use std::cell::Cell;
+//! # use std::mem;
+//! # use std::rc::Rc;
 //! struct Evil(Box<u32>, Rc<Cell<Option<Evil>>>);
 //! impl Clone for Evil {
 //!     fn clone(&self) -> Self {
@@ -41,6 +44,7 @@
 //! would require temporarily replacing it with a default value:
 //!
 //! ```rust
+//! # use std::cell::Cell;
 //! fn option_dance<T, F, R>(cell: &Cell<T>, f: F) -> R
 //!     where T: Default, F: FnOnce(&mut T) -> R
 //! {

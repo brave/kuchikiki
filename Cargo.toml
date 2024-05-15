@@ -1,6 +1,6 @@
 [package]
 name = "kuchikiki"
-version = "0.8.4-speedreader"
+version = "0.8.5-speedreader"
 authors = [
   "Brave Authors",
   "Ralph Giles <rgiles@brave.com>",

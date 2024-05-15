@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - speedreader
-    pull_request:
+  pull_request:
 
 jobs:
   test:

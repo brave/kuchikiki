@@ -13,7 +13,6 @@ edition = "2018"
 
 [lib]
 name = "kuchikiki"
-doctest = false
 
 [dependencies]
 cssparser = "0.27"

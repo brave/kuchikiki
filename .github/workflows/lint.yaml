@@ -1,13 +1,14 @@
 name: Lint
+
 on:
   push:
     branches:
       - main
+      - speedreader
   pull_request:
-    branches:
-      main
   schedule:
     - cron: '28 20 2 * *'
+
 jobs:
   lint:
     runs-on: ubuntu-latest

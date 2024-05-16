@@ -78,6 +78,6 @@ impl Attributes {
 
     /// Like IndexMap::remove
     pub fn remove<A: Into<LocalName>>(&mut self, local_name: A) -> Option<Attribute> {
-        self.map.remove(&ExpandedName::new(ns!(), local_name))
+        self.map.swap_remove(&ExpandedName::new(ns!(), local_name))
     }
 }

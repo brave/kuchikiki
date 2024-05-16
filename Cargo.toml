@@ -1,6 +1,6 @@
 [package]
 name = "kuchikiki"
-version = "0.8.4-speedreader"
+version = "0.8.5-speedreader"
 authors = [
   "Brave Authors",
   "Ralph Giles <rgiles@brave.com>",
@@ -13,14 +13,13 @@ edition = "2018"
 
 [lib]
 name = "kuchikiki"
-doctest = false
 
 [dependencies]
 cssparser = "0.27"
 matches = "0.1.4"
 html5ever = "0.25.1"
 selectors = "0.22"
-indexmap = { version = "1.9.3", features = [ "std" ] }
+indexmap = "2.2.6"
 
 [dev-dependencies]
 tempfile = "3"

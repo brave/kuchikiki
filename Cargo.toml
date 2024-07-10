@@ -9,7 +9,7 @@ authors = [
 license = "MIT"
 description = "(口利き) HTML tree manipulation library"
 repository = "https://github.com/brave/kuchikiki"
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "kuchikiki"

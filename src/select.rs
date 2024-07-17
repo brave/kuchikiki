@@ -394,6 +394,21 @@ impl selectors::Element for NodeDataRef<ElementData> {
     fn apply_selector_flags(&self, _flags: ElementSelectorFlags) {}
 }
 
+/// A cache used to speed up resolution of CSS selectors.
+///
+/// The same cache should never be used for a different document, or after the document has
+/// been changed. However, it should be safe to use the same cache with different selectors.
+#[derive(Default)]
+pub struct SelectorCache {
+    nth_index_cache: NthIndexCache,
+}
+impl SelectorCache {
+    /// Creates a new selector cache.
+    pub fn new() -> SelectorCache {
+        SelectorCache::default()
+    }
+}
+
 /// A pre-compiled list of CSS Selectors.
 pub struct Selectors(pub Vec<Selector>);
 
@@ -430,6 +445,19 @@ impl Selectors {
         self.0.iter().any(|s| s.matches(element))
     }
 
+    /// Returns whether the given element matches this list of selectors.
+    ///
+    /// The same cache should never be used for a different document, or after the document has
+    /// been changed. However, it should be safe to use the same cache with different selectors.
+    #[inline]
+    pub fn matches_cached(
+        &self,
+        element: &NodeDataRef<ElementData>,
+        cache: &mut SelectorCache,
+    ) -> bool {
+        self.0.iter().any(|s| s.matches_cached(element, cache))
+    }
+
     /// Filter an element iterator, yielding those matching this list of selectors.
     #[inline]
     pub fn filter<I>(&self, iter: I) -> Select<I, &Selectors>
@@ -439,6 +467,7 @@ impl Selectors {
         Select {
             iter,
             selectors: self,
+            selection_cache: Default::default(),
         }
     }
 }
@@ -447,11 +476,32 @@ impl Selector {
     /// Returns whether the given element matches this selector.
     #[inline]
     pub fn matches(&self, element: &NodeDataRef<ElementData>) -> bool {
-        let mut cache = NthIndexCache::default(); // TODO: Properly cache.
+        let mut nth_index_cache = NthIndexCache::default();
         let mut context = matching::MatchingContext::new(
             matching::MatchingMode::Normal,
             None,
-            &mut cache,
+            &mut nth_index_cache,
+            QuirksMode::NoQuirks,
+            NeedsSelectorFlags::No,
+            IgnoreNthChildForInvalidation::No,
+        );
+        matching::matches_selector(&self.0, 0, None, element, &mut context)
+    }
+
+    /// Returns whether the given element matches this selector.
+    ///
+    /// The same cache should never be used for a different document, or after the document has
+    /// been changed. However, it should be safe to use the same cache with different selectors.
+    #[inline]
+    pub fn matches_cached(
+        &self,
+        element: &NodeDataRef<ElementData>,
+        cache: &mut SelectorCache,
+    ) -> bool {
+        let mut context = matching::MatchingContext::new(
+            matching::MatchingMode::Normal,
+            None,
+            &mut cache.nth_index_cache,
             QuirksMode::NoQuirks,
             NeedsSelectorFlags::No,
             IgnoreNthChildForInvalidation::No,

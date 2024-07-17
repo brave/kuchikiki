@@ -90,6 +90,22 @@ impl<'i> Parser<'i> for KuchikiParser {
     type Impl = KuchikiSelectors;
     type Error = SelectorParseErrorKind<'i>;
 
+    fn parse_nth_child_of(&self) -> bool {
+        true
+    }
+
+    fn parse_is_and_where(&self) -> bool {
+        true
+    }
+
+    fn parse_has(&self) -> bool {
+        true
+    }
+
+    fn parse_parent_selector(&self) -> bool {
+        true
+    }
+
     fn parse_non_ts_pseudo_class(
         &self,
         location: SourceLocation,

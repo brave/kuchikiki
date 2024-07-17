@@ -15,9 +15,9 @@ edition = "2018"
 name = "kuchikiki"
 
 [dependencies]
-cssparser = "0.28"
+cssparser = "0.31"
 html5ever = "0.27.0"
-selectors = "0.23"
+selectors = "0.25"
 indexmap = "2.2.6"
 
 [dev-dependencies]

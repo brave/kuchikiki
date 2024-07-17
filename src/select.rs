@@ -9,13 +9,14 @@ use crate::tree::{ElementData, Node, NodeData, NodeRef};
 use cssparser::{self, CowRcStr, ParseError, SourceLocation, ToCss};
 use html5ever::{LocalName, Namespace};
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
-use selectors::context::QuirksMode;
-use selectors::parser::SelectorParseErrorKind;
+use selectors::context::{IgnoreNthChildForInvalidation, NeedsSelectorFlags, QuirksMode};
+use selectors::parser::{ParseRelative, SelectorParseErrorKind};
 use selectors::parser::{
     NonTSPseudoClass, Parser, Selector as GenericSelector, SelectorImpl, SelectorList,
 };
-use selectors::{self, matching, OpaqueElement};
+use selectors::{self, matching, NthIndexCache, OpaqueElement};
 use std::{fmt, fmt::Write, ops::Deref};
+use selectors::matching::ElementSelectorFlags;
 
 /// The definition of whitespace per CSS Selectors Level 3 § 4.
 ///
@@ -80,7 +81,7 @@ impl SelectorImpl for KuchikiSelectors {
     type NonTSPseudoClass = PseudoClass;
     type PseudoElement = PseudoElement;
 
-    type ExtraMatchingData = ();
+    type ExtraMatchingData<'a> = ();
 }
 
 struct KuchikiParser;
@@ -340,15 +341,11 @@ impl selectors::Element for NodeDataRef<ElementData> {
         match *pseudo {}
     }
 
-    fn match_non_ts_pseudo_class<F>(
+    fn match_non_ts_pseudo_class(
         &self,
         pseudo: &PseudoClass,
         _context: &mut matching::MatchingContext<KuchikiSelectors>,
-        _flags_setter: &mut F,
-    ) -> bool
-    where
-        F: FnMut(&Self, matching::ElementSelectorFlags),
-    {
+    ) -> bool {
         use self::PseudoClass::*;
         match *pseudo {
             Active | Focus | Hover | Enabled | Disabled | Checked | Indeterminate | Visited => {
@@ -364,6 +361,16 @@ impl selectors::Element for NodeDataRef<ElementData> {
             }
         }
     }
+
+    fn first_element_child(&self) -> Option<Self> {
+        self
+            .as_node()
+            .children()
+            .flat_map(|x| x.into_element_ref())
+            .next()
+    }
+
+    fn apply_selector_flags(&self, _flags: ElementSelectorFlags) {}
 }
 
 /// A pre-compiled list of CSS Selectors.
@@ -386,7 +393,11 @@ impl Selectors {
     #[inline]
     pub fn compile(s: &str) -> Result<Selectors, ()> {
         let mut input = cssparser::ParserInput::new(s);
-        match SelectorList::parse(&KuchikiParser, &mut cssparser::Parser::new(&mut input)) {
+        match SelectorList::parse(
+            &KuchikiParser,
+            &mut cssparser::Parser::new(&mut input),
+            ParseRelative::No,
+        ) {
             Ok(list) => Ok(Selectors(list.0.into_iter().map(Selector).collect())),
             Err(_) => Err(()),
         }
@@ -415,13 +426,16 @@ impl Selector {
     /// Returns whether the given element matches this selector.
     #[inline]
     pub fn matches(&self, element: &NodeDataRef<ElementData>) -> bool {
+        let mut cache = NthIndexCache::default(); // TODO: Properly cache.
         let mut context = matching::MatchingContext::new(
             matching::MatchingMode::Normal,
             None,
-            None,
+            &mut cache,
             QuirksMode::NoQuirks,
+            NeedsSelectorFlags::No,
+            IgnoreNthChildForInvalidation::No,
         );
-        matching::matches_selector(&self.0, 0, None, element, &mut context, &mut |_, _| {})
+        matching::matches_selector(&self.0, 0, None, element, &mut context)
     }
 
     /// Return the specificity of this selector.

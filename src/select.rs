@@ -10,13 +10,13 @@ use cssparser::{self, CowRcStr, ParseError, SourceLocation, ToCss};
 use html5ever::{LocalName, Namespace};
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
 use selectors::context::{IgnoreNthChildForInvalidation, NeedsSelectorFlags, QuirksMode};
-use selectors::parser::{ParseRelative, SelectorParseErrorKind};
+use selectors::matching::ElementSelectorFlags;
 use selectors::parser::{
     NonTSPseudoClass, Parser, Selector as GenericSelector, SelectorImpl, SelectorList,
 };
+use selectors::parser::{ParseRelative, SelectorParseErrorKind};
 use selectors::{self, matching, NthIndexCache, OpaqueElement};
 use std::{fmt, fmt::Write, ops::Deref};
-use selectors::matching::ElementSelectorFlags;
 
 /// The definition of whitespace per CSS Selectors Level 3 § 4.
 ///
@@ -26,7 +26,10 @@ static SELECTOR_WHITESPACE: &[char] = &[' ', '\t', '\n', '\r', '\x0C'];
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
 pub struct CssString(pub String);
 impl ToCss for CssString {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: Write {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: Write,
+    {
         dest.write_str(&self.0)
     }
 }
@@ -50,7 +53,10 @@ impl Deref for CssString {
 #[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
 pub struct CssLocalName(pub LocalName);
 impl ToCss for CssLocalName {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: Write {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: Write,
+    {
         write!(dest, "{}", self.0)
     }
 }
@@ -379,8 +385,7 @@ impl selectors::Element for NodeDataRef<ElementData> {
     }
 
     fn first_element_child(&self) -> Option<Self> {
-        self
-            .as_node()
+        self.as_node()
             .children()
             .flat_map(|x| x.into_element_ref())
             .next()

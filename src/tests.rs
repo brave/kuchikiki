@@ -2,11 +2,11 @@ use html5ever::tree_builder::QuirksMode;
 use html5ever::QualName;
 use std::path::Path;
 
-use tempfile::TempDir;
-use crate::NodeRef;
 use crate::parser::{parse_fragment, parse_html};
 use crate::select::*;
 use crate::traits::*;
+use crate::NodeRef;
+use tempfile::TempDir;
 
 #[test]
 fn text_nodes() {

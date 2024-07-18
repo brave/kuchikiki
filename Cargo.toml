@@ -14,6 +14,10 @@ edition = "2018"
 [lib]
 name = "kuchikiki"
 
+[[bench]]
+name = "main_bench"
+harness = false
+
 [dependencies]
 cssparser = "0.31"
 html5ever = "0.27.0"
@@ -21,4 +25,5 @@ selectors = "0.25"
 indexmap = "2.2.6"
 
 [dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
 tempfile = "3"

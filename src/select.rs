@@ -396,8 +396,18 @@ impl selectors::Element for NodeDataRef<ElementData> {
 
 /// A cache used to speed up resolution of CSS selectors.
 ///
-/// The same cache should never be used for a different document, or after the document has
-/// been changed. However, it should be safe to use the same cache with different selectors.
+/// # Correctness
+///
+/// The cache stores information about the nodes in any documents. To avoid incorrect selector
+/// results, avoid using the same cache if any node in a document this cache has been used to
+/// process has been changed, removed or added.
+///
+/// Currently, this cache is only used to save the nth child index of elements for the
+/// `:nth-child()` and `:nth-of-type()` selectors, but additional properties may be cached in the
+/// future.
+///
+/// The same cache is safe to use with multiple selectors. The same cache should be safe to use
+/// with different documents as well, but this has few benefits in most cases.
 #[derive(Default)]
 pub struct SelectorCache {
     nth_index_cache: NthIndexCache,
@@ -447,8 +457,18 @@ impl Selectors {
 
     /// Returns whether the given element matches this list of selectors.
     ///
-    /// The same cache should never be used for a different document, or after the document has
-    /// been changed. However, it should be safe to use the same cache with different selectors.
+    /// # Correctness
+    ///
+    /// The cache stores information about the nodes in any documents. To avoid incorrect selector
+    /// results, avoid using the same cache if any node in a document this cache has been used to
+    /// process has been changed, removed or added.
+    ///
+    /// Currently, this cache is only used to save the nth child index of elements for the
+    /// `:nth-child()` and `:nth-of-type()` selectors, but additional properties may be cached in
+    /// the future.
+    ///
+    /// The same cache is safe to use with multiple selectors. The same cache should be safe to use
+    /// with different documents as well, but this has few benefits in most cases.
     #[inline]
     pub fn matches_cached(
         &self,
@@ -490,8 +510,18 @@ impl Selector {
 
     /// Returns whether the given element matches this selector.
     ///
-    /// The same cache should never be used for a different document, or after the document has
-    /// been changed. However, it should be safe to use the same cache with different selectors.
+    /// # Correctness
+    ///
+    /// The cache stores information about the nodes in any documents. To avoid incorrect selector
+    /// results, avoid using the same cache if any node in a document this cache has been used to
+    /// process has been changed, removed or added.
+    ///
+    /// Currently, this cache is only used to save the nth child index of elements for the
+    /// `:nth-child()` and `:nth-of-type()` selectors, but additional properties may be cached in
+    /// the future.
+    ///
+    /// The same cache is safe to use with multiple selectors. The same cache should be safe to use
+    /// with different documents as well, but this has few benefits in most cases.
     #[inline]
     pub fn matches_cached(
         &self,

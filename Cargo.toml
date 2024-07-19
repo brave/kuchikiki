@@ -25,5 +25,5 @@ selectors = "0.25"
 indexmap = "2.2.6"
 
 [dev-dependencies]
-criterion = { version = "0.4", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 tempfile = "3"

@@ -21,16 +21,38 @@ static SELECTOR_WHITESPACE: &[char] = &[' ', '\t', '\n', '\r', '\x0C'];
 #[derive(Debug, Clone)]
 pub struct KuchikiSelectors;
 
+#[derive(Default, Clone, Eq, PartialEq)]
+pub struct CssLocalName(LocalName);
+
+impl cssparser::ToCss for CssLocalName {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        write!(dest, "{}", self.0)
+    }
+}
+
+impl<'a> From<&'a str> for CssLocalName {
+    fn from(value: &'a str) -> Self {
+        Self(LocalName::from(value))
+    }
+}
+
+impl AsRef<str> for CssLocalName {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
+
 impl SelectorImpl for KuchikiSelectors {
-    type AttrValue = String;
-    type Identifier = LocalName;
-    type ClassName = LocalName;
-    type LocalName = LocalName;
-    type PartName = LocalName;
-    type NamespacePrefix = LocalName;
+    type AttrValue = CssLocalName;
+    type Identifier = CssLocalName;
+    type LocalName = CssLocalName;
+    type NamespacePrefix = CssLocalName;
     type NamespaceUrl = Namespace;
     type BorrowedNamespaceUrl = Namespace;
-    type BorrowedLocalName = LocalName;
+    type BorrowedLocalName = CssLocalName;
 
     type NonTSPseudoClass = PseudoClass;
     type PseudoElement = PseudoElement;
@@ -106,10 +128,6 @@ impl NonTSPseudoClass for PseudoClass {
             *self,
             PseudoClass::Active | PseudoClass::Hover | PseudoClass::Focus
         )
-    }
-
-    fn has_zero_specificity(&self) -> bool {
-        false
     }
 }
 
@@ -206,8 +224,8 @@ impl selectors::Element for NodeDataRef<ElementData> {
     }
 
     #[inline]
-    fn has_local_name(&self, name: &LocalName) -> bool {
-        self.name.local == *name
+    fn has_local_name(&self, name: &CssLocalName) -> bool {
+        self.name.local == *name.0
     }
     #[inline]
     fn has_namespace(&self, namespace: &Namespace) -> bool {
@@ -215,17 +233,12 @@ impl selectors::Element for NodeDataRef<ElementData> {
     }
 
     #[inline]
-    fn is_part(&self, _name: &LocalName) -> bool {
+    fn is_part(&self, _name: &CssLocalName) -> bool {
         false
     }
 
     #[inline]
-    fn exported_part(&self, _: &LocalName) -> Option<LocalName> {
-        None
-    }
-
-    #[inline]
-    fn imported_part(&self, _: &LocalName) -> Option<LocalName> {
+    fn imported_part(&self, _: &CssLocalName) -> Option<CssLocalName> {
         None
     }
 
@@ -254,18 +267,18 @@ impl selectors::Element for NodeDataRef<ElementData> {
     }
 
     #[inline]
-    fn has_id(&self, id: &LocalName, case_sensitivity: CaseSensitivity) -> bool {
+    fn has_id(&self, id: &CssLocalName, case_sensitivity: CaseSensitivity) -> bool {
         self.attributes
             .borrow()
             .get(local_name!("id"))
             .map_or(false, |id_attr| {
-                case_sensitivity.eq(id.as_bytes(), id_attr.as_bytes())
+                case_sensitivity.eq(id.0.as_bytes(), id_attr.as_bytes())
             })
     }
 
     #[inline]
-    fn has_class(&self, name: &LocalName, case_sensitivity: CaseSensitivity) -> bool {
-        let name = name.as_bytes();
+    fn has_class(&self, name: &CssLocalName, case_sensitivity: CaseSensitivity) -> bool {
+        let name = name.0.as_bytes();
         !name.is_empty()
             && if let Some(class_attr) = self.attributes.borrow().get(local_name!("class")) {
                 class_attr
@@ -280,18 +293,18 @@ impl selectors::Element for NodeDataRef<ElementData> {
     fn attr_matches(
         &self,
         ns: &NamespaceConstraint<&Namespace>,
-        local_name: &LocalName,
-        operation: &AttrSelectorOperation<&String>,
+        local_name: &CssLocalName,
+        operation: &AttrSelectorOperation<&CssLocalName>,
     ) -> bool {
         let attrs = self.attributes.borrow();
         match *ns {
             NamespaceConstraint::Any => attrs
                 .map
                 .iter()
-                .any(|(name, attr)| name.local == *local_name && operation.eval_str(&attr.value)),
+                .any(|(name, attr)| name.local == *local_name.0 && operation.eval_str(&attr.value)),
             NamespaceConstraint::Specific(ns_url) => attrs
                 .map
-                .get(&ExpandedName::new(ns_url, local_name.clone()))
+                .get(&ExpandedName::new(ns_url, local_name.0.clone()))
                 .map_or(false, |attr| operation.eval_str(&attr.value)),
         }
     }

@@ -16,7 +16,7 @@ pub struct ParseOpts {
     pub tree_builder: html5ever::tree_builder::TreeBuilderOpts,
 
     /// A callback for HTML parse errors (which are never fatal).
-    pub on_parse_error: Option<Box<dyn FnMut(Cow<'static, str>)>>,
+    pub on_parse_error: Option<Box<dyn Fn(Cow<'static, str>)>>,
 }
 
 /// Parse an HTML document with html5ever and the default configuration.
@@ -65,7 +65,7 @@ pub struct Sink {
     pub document_node: NodeRef,
 
     /// The Sink will invoke this callback if it encounters a parse error.
-    pub on_parse_error: Option<Box<dyn FnMut(Cow<'static, str>)>>,
+    pub on_parse_error: Option<Box<dyn Fn(Cow<'static, str>)>>,
 }
 
 impl Default for Sink {
@@ -79,6 +79,7 @@ impl Default for Sink {
 
 impl TreeSink for Sink {
     type Output = Self;
+    type ElemName<'a> = ExpandedName<'a>;
 
     fn finish(self) -> Self {
         self
@@ -87,19 +88,19 @@ impl TreeSink for Sink {
     type Handle = NodeRef;
 
     #[inline]
-    fn parse_error(&mut self, message: Cow<'static, str>) {
-        if let Some(ref mut handler) = self.on_parse_error {
+    fn parse_error(&self, message: Cow<'static, str>) {
+        if let Some(ref handler) = self.on_parse_error {
             handler(message)
         }
     }
 
     #[inline]
-    fn get_document(&mut self) -> NodeRef {
+    fn get_document(&self) -> NodeRef {
         self.document_node.clone()
     }
 
     #[inline]
-    fn set_quirks_mode(&mut self, mode: QuirksMode) {
+    fn set_quirks_mode(&self, mode: QuirksMode) {
         self.document_node
             .as_document()
             .unwrap()
@@ -119,7 +120,7 @@ impl TreeSink for Sink {
 
     #[inline]
     fn create_element(
-        &mut self,
+        &self,
         name: QualName,
         attrs: Vec<Attribute>,
         _flags: ElementFlags,
@@ -141,17 +142,17 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn create_comment(&mut self, text: StrTendril) -> NodeRef {
+    fn create_comment(&self, text: StrTendril) -> NodeRef {
         NodeRef::new_comment(text)
     }
 
     #[inline]
-    fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> NodeRef {
+    fn create_pi(&self, target: StrTendril, data: StrTendril) -> NodeRef {
         NodeRef::new_processing_instruction(target, data)
     }
 
     #[inline]
-    fn append(&mut self, parent: &NodeRef, child: NodeOrText<NodeRef>) {
+    fn append(&self, parent: &NodeRef, child: NodeOrText<NodeRef>) {
         match child {
             NodeOrText::AppendNode(node) => parent.append(node),
             NodeOrText::AppendText(text) => {
@@ -167,7 +168,7 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn append_before_sibling(&mut self, sibling: &NodeRef, child: NodeOrText<NodeRef>) {
+    fn append_before_sibling(&self, sibling: &NodeRef, child: NodeOrText<NodeRef>) {
         match child {
             NodeOrText::AppendNode(node) => sibling.insert_before(node),
             NodeOrText::AppendText(text) => {
@@ -184,7 +185,7 @@ impl TreeSink for Sink {
 
     #[inline]
     fn append_doctype_to_document(
-        &mut self,
+        &self,
         name: StrTendril,
         public_id: StrTendril,
         system_id: StrTendril,
@@ -194,7 +195,7 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn add_attrs_if_missing(&mut self, target: &NodeRef, attrs: Vec<Attribute>) {
+    fn add_attrs_if_missing(&self, target: &NodeRef, attrs: Vec<Attribute>) {
         let element = target.as_element().unwrap();
         let mut attributes = element.attributes.borrow_mut();
 
@@ -214,12 +215,12 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn remove_from_parent(&mut self, target: &NodeRef) {
+    fn remove_from_parent(&self, target: &NodeRef) {
         target.detach()
     }
 
     #[inline]
-    fn reparent_children(&mut self, node: &NodeRef, new_parent: &NodeRef) {
+    fn reparent_children(&self, node: &NodeRef, new_parent: &NodeRef) {
         // FIXME: Can this be done more effciently in rctree,
         // by moving the whole linked list of children at once?
         for child in node.children() {
@@ -228,12 +229,12 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn mark_script_already_started(&mut self, _node: &NodeRef) {
+    fn mark_script_already_started(&self, _node: &NodeRef) {
         // FIXME: Is this useful outside of a browser?
     }
 
     #[inline]
-    fn get_template_contents(&mut self, target: &NodeRef) -> NodeRef {
+    fn get_template_contents(&self, target: &NodeRef) -> NodeRef {
         target
             .as_element()
             .unwrap()
@@ -243,7 +244,7 @@ impl TreeSink for Sink {
     }
 
     fn append_based_on_parent_node(
-        &mut self,
+        &self,
         element: &NodeRef,
         prev_element: &NodeRef,
         child: NodeOrText<NodeRef>,

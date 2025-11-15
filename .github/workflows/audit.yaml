@@ -12,6 +12,10 @@ on:
   schedule:
     - cron: '21 20 2 * *'
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   audit:
     runs-on: ubuntu-latest

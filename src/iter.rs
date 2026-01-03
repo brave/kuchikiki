@@ -11,6 +11,7 @@ use std::iter::Rev;
 use crate::node_data_ref::NodeDataRef;
 use crate::select::Selectors;
 use crate::tree::{ElementData, NodeRef};
+use crate::SelectorCache;
 
 impl NodeRef {
     /// Return an iterator of references to this node and its ancestors.
@@ -392,6 +393,9 @@ where
 
     /// The selectors to be matched.
     pub selectors: S,
+
+    /// The selector cached used to speed up matching.
+    pub selection_cache: SelectorCache,
 }
 
 impl<I, S> Iterator for Select<I, S>
@@ -404,9 +408,10 @@ where
     #[inline]
     fn next(&mut self) -> Option<NodeDataRef<ElementData>> {
         let selectors = self.selectors.borrow();
+        let cache = &mut self.selection_cache;
         self.iter
             .by_ref()
-            .find(|element| selectors.matches(element))
+            .find(|element| selectors.matches_cached(element, cache))
     }
 }
 
@@ -418,10 +423,11 @@ where
     #[inline]
     fn next_back(&mut self) -> Option<NodeDataRef<ElementData>> {
         let selectors = self.selectors.borrow();
+        let cache = &mut self.selection_cache;
         self.iter
             .by_ref()
             .rev()
-            .find(|element| selectors.matches(element))
+            .find(|element| selectors.matches_cached(element, cache))
     }
 }
 
@@ -460,6 +466,7 @@ pub trait ElementIterator: Sized + Iterator<Item = NodeDataRef<ElementData>> {
         Selectors::compile(selectors).map(|s| Select {
             iter: self,
             selectors: s,
+            selection_cache: Default::default(),
         })
     }
 }

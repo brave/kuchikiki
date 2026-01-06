@@ -2,14 +2,14 @@ use html5ever::{LocalName, Namespace, Prefix};
 use indexmap::{map::Entry, IndexMap};
 
 /// Convenience wrapper around a indexmap that adds method for attributes in the null namespace.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Attributes {
     /// A map of attributes whose name can have namespaces.
     pub map: IndexMap<ExpandedName, Attribute>,
 }
 
 /// <https://www.w3.org/TR/REC-xml-names/#dt-expname>
-#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Default)]
 pub struct ExpandedName {
     /// Namespace URL
     pub ns: Namespace,
@@ -28,7 +28,7 @@ impl ExpandedName {
 }
 
 /// The non-identifying parts of an attribute
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Attribute {
     /// The namespace prefix, if any
     pub prefix: Option<Prefix>,

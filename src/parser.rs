@@ -2,6 +2,7 @@ use html5ever::tendril::StrTendril;
 use html5ever::tree_builder::{ElementFlags, NodeOrText, QuirksMode, TreeSink};
 use html5ever::{self, Attribute, ExpandedName, QualName};
 use std::borrow::Cow;
+use std::cell::RefCell;
 
 use crate::attributes;
 use crate::tree::NodeRef;
@@ -16,7 +17,7 @@ pub struct ParseOpts {
     pub tree_builder: html5ever::tree_builder::TreeBuilderOpts,
 
     /// A callback for HTML parse errors (which are never fatal).
-    pub on_parse_error: Option<Box<dyn FnMut(Cow<'static, str>)>>,
+    pub on_parse_error: Option<ParseErrorHandler>,
 }
 
 /// Parse an HTML document with html5ever and the default configuration.
@@ -28,7 +29,7 @@ pub fn parse_html() -> html5ever::Parser<Sink> {
 pub fn parse_html_with_options(opts: ParseOpts) -> html5ever::Parser<Sink> {
     let sink = Sink {
         document_node: NodeRef::new_document(),
-        on_parse_error: opts.on_parse_error,
+        on_parse_error: RefCell::new(opts.on_parse_error),
     };
     let html5opts = html5ever::ParseOpts {
         tokenizer: opts.tokenizer,
@@ -50,19 +51,21 @@ pub fn parse_fragment_with_options(
 ) -> html5ever::Parser<Sink> {
     let sink = Sink {
         document_node: NodeRef::new_document(),
-        on_parse_error: opts.on_parse_error,
+        on_parse_error: RefCell::new(opts.on_parse_error),
     };
     let html5opts = html5ever::ParseOpts {
         tokenizer: opts.tokenizer,
         tree_builder: opts.tree_builder,
     };
-    html5ever::parse_fragment(sink, html5opts, ctx_name, ctx_attr)
+    html5ever::parse_fragment(sink, html5opts, ctx_name, ctx_attr, false)
 }
+
+type ParseErrorHandler = Box<dyn FnMut(Cow<'static, str>)>;
 
 /// Receives new tree nodes during parsing.
 pub struct Sink {
     document_node: NodeRef,
-    on_parse_error: Option<Box<dyn FnMut(Cow<'static, str>)>>,
+    on_parse_error: RefCell<Option<ParseErrorHandler>>,
 }
 
 impl TreeSink for Sink {
@@ -74,20 +77,22 @@ impl TreeSink for Sink {
 
     type Handle = NodeRef;
 
+    type ElemName<'a> = ExpandedName<'a>;
+
     #[inline]
-    fn parse_error(&mut self, message: Cow<'static, str>) {
-        if let Some(ref mut handler) = self.on_parse_error {
+    fn parse_error(&self, message: Cow<'static, str>) {
+        if let Some(ref mut handler) = *self.on_parse_error.borrow_mut() {
             handler(message)
         }
     }
 
     #[inline]
-    fn get_document(&mut self) -> NodeRef {
+    fn get_document(&self) -> NodeRef {
         self.document_node.clone()
     }
 
     #[inline]
-    fn set_quirks_mode(&mut self, mode: QuirksMode) {
+    fn set_quirks_mode(&self, mode: QuirksMode) {
         self.document_node
             .as_document()
             .unwrap()
@@ -101,13 +106,13 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn elem_name<'a>(&self, target: &'a NodeRef) -> ExpandedName<'a> {
+    fn elem_name<'a>(&'a self, target: &'a NodeRef) -> ExpandedName<'a> {
         target.as_element().unwrap().name.expanded()
     }
 
     #[inline]
     fn create_element(
-        &mut self,
+        &self,
         name: QualName,
         attrs: Vec<Attribute>,
         _flags: ElementFlags,
@@ -129,17 +134,17 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn create_comment(&mut self, text: StrTendril) -> NodeRef {
+    fn create_comment(&self, text: StrTendril) -> NodeRef {
         NodeRef::new_comment(text)
     }
 
     #[inline]
-    fn create_pi(&mut self, target: StrTendril, data: StrTendril) -> NodeRef {
+    fn create_pi(&self, target: StrTendril, data: StrTendril) -> NodeRef {
         NodeRef::new_processing_instruction(target, data)
     }
 
     #[inline]
-    fn append(&mut self, parent: &NodeRef, child: NodeOrText<NodeRef>) {
+    fn append(&self, parent: &NodeRef, child: NodeOrText<NodeRef>) {
         match child {
             NodeOrText::AppendNode(node) => parent.append(node),
             NodeOrText::AppendText(text) => {
@@ -155,7 +160,7 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn append_before_sibling(&mut self, sibling: &NodeRef, child: NodeOrText<NodeRef>) {
+    fn append_before_sibling(&self, sibling: &NodeRef, child: NodeOrText<NodeRef>) {
         match child {
             NodeOrText::AppendNode(node) => sibling.insert_before(node),
             NodeOrText::AppendText(text) => {
@@ -172,7 +177,7 @@ impl TreeSink for Sink {
 
     #[inline]
     fn append_doctype_to_document(
-        &mut self,
+        &self,
         name: StrTendril,
         public_id: StrTendril,
         system_id: StrTendril,
@@ -182,7 +187,7 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn add_attrs_if_missing(&mut self, target: &NodeRef, attrs: Vec<Attribute>) {
+    fn add_attrs_if_missing(&self, target: &NodeRef, attrs: Vec<Attribute>) {
         let element = target.as_element().unwrap();
         let mut attributes = element.attributes.borrow_mut();
 
@@ -202,12 +207,12 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn remove_from_parent(&mut self, target: &NodeRef) {
+    fn remove_from_parent(&self, target: &NodeRef) {
         target.detach()
     }
 
     #[inline]
-    fn reparent_children(&mut self, node: &NodeRef, new_parent: &NodeRef) {
+    fn reparent_children(&self, node: &NodeRef, new_parent: &NodeRef) {
         // FIXME: Can this be done more effciently in rctree,
         // by moving the whole linked list of children at once?
         for child in node.children() {
@@ -216,12 +221,12 @@ impl TreeSink for Sink {
     }
 
     #[inline]
-    fn mark_script_already_started(&mut self, _node: &NodeRef) {
+    fn mark_script_already_started(&self, _node: &NodeRef) {
         // FIXME: Is this useful outside of a browser?
     }
 
     #[inline]
-    fn get_template_contents(&mut self, target: &NodeRef) -> NodeRef {
+    fn get_template_contents(&self, target: &NodeRef) -> NodeRef {
         target
             .as_element()
             .unwrap()
@@ -231,7 +236,7 @@ impl TreeSink for Sink {
     }
 
     fn append_based_on_parent_node(
-        &mut self,
+        &self,
         element: &NodeRef,
         prev_element: &NodeRef,
         child: NodeOrText<NodeRef>,

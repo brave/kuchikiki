@@ -7,10 +7,9 @@ use html5ever::{LocalName, Namespace};
 use precomputed_hash::PrecomputedHash;
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
 use selectors::context::{MatchingForInvalidation, NeedsSelectorFlags, QuirksMode, SelectorCaches};
-use selectors::parser::SelectorParseErrorKind;
+use selectors::parser::{ParseRelative, SelectorParseErrorKind};
 use selectors::parser::{
-    NonTSPseudoClass, ParseRelative, Parser, Selector as GenericSelector, SelectorImpl,
-    SelectorList,
+    NonTSPseudoClass, Parser, Selector as GenericSelector, SelectorImpl, SelectorList,
 };
 use selectors::{self, matching, OpaqueElement};
 use std::fmt;
@@ -418,11 +417,11 @@ impl Selector {
     /// Returns whether the given element matches this selector.
     #[inline]
     pub fn matches(&self, element: &NodeDataRef<ElementData>) -> bool {
-        let mut selector_caches = SelectorCaches::default();
+        let mut selector_cache = SelectorCaches::default();
         let mut context = matching::MatchingContext::new(
             matching::MatchingMode::Normal,
             None,
-            &mut selector_caches,
+            &mut selector_cache,
             QuirksMode::NoQuirks,
             NeedsSelectorFlags::No,
             MatchingForInvalidation::No,
